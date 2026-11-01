@@ -31,7 +31,7 @@ class SgrSat
         $dtfim = new \DateTime($final);
         $ini = (string) $dtini->format('dmY') . "000000";
         $fim = (string) $dtfim->format('dmY') . '595900';
-        $satserie = (string) str_pad($serie, 9, '0', STR_PAD_LEFT);
+        $satserie = str_pad((string) $serie, 9, '0', STR_PAD_LEFT);
 
         $message = "<?xml version='1.0' encoding='UTF-8'?>"
             . "<consLote xmlns=\"http://www.fazenda.sp.gov.br/sat\" versao=\"0.06\">"
@@ -99,14 +99,17 @@ class SgrSat
         $headsize = curl_getinfo($oCurl, CURLINFO_HEADER_SIZE);
         //$httpcode = curl_getinfo($oCurl, CURLINFO_HTTP_CODE);
         curl_close($oCurl);
-        //$responseHead = trim(substr($response, 0, $headsize));
-        $responseBody = trim(substr($response, $headsize));
-        if (!empty($oaperror)) {
+        if (!empty($soaperror)) {
             throw new \Exception("Falha de comunicação: " . $soaperror_code . ' - ' . $soaperror, $soaperror_code);
         }
+        //$responseHead = trim(substr($response, 0, $headsize));
+        $responseBody = trim(substr($response, $headsize));
         $dom = new \DOMDocument();
         $dom->loadXML($responseBody);
         $node = $dom->getElementsByTagName('CfeConsultarLotesResult')->item(0);
+        if (empty($node)) {
+            throw new \Exception('A resposta não contém o elemento CfeConsultarLotesResult.');
+        }
         //return $responseBody;
         return $node->textContent;
     }
